@@ -2,6 +2,31 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+	  <LangVersion>latest</LangVersion>
+	  <AssemblyName>Sky.Xunit.TestDataExpand</AssemblyName>
+	  <PackageTags>Xunit</PackageTags>
+	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	  <PackageReleaseNotes></PackageReleaseNotes>
+	  <PackageLicenseUrl></PackageLicenseUrl>
+	  <RepositoryType>git</RepositoryType>
+	  <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+	  <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+	  <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+	  <Copyright>MIT</Copyright>
+	  <PackageLicenseFile>LICENSE</PackageLicenseFile>
+	  <EmbedUntrackedSources>true</EmbedUntrackedSources>
+	  <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+	  <PublishRepositoryUrl>true</PublishRepositoryUrl>
+	  <IncludeSymbols>true</IncludeSymbols>
+	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	  <DebugType>embedded</DebugType>
+
+	  <PackageId>Sky.Xunit.TestDataExpand</PackageId>
+	  <Description>xunit框架的扩展，可以将批量测试拆分成单个测试</Description>
+	  <PackageProjectUrl>https://github.com/jkh404/Sky.Xunit.TestDataExpand</PackageProjectUrl>
+	  <Authors>Skyqwe</Authors>
+	  <RepositoryUrl>https://github.com/jkh404/Sky.Xunit.TestDataExpand</RepositoryUrl>
+	  <Version>0.0.2</Version>
   </PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
@@ -10,5 +35,11 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\LICENSE">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
 	</ItemGroup>
 </Project>

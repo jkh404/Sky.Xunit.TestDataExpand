@@ -78,6 +78,7 @@ namespace Sky.Xunit.TestDataExpand
                 {
                     return (index, Parameter);
                 }
+                index++;
             }
             return null;
         }
@@ -205,15 +206,20 @@ namespace Sky.Xunit.TestDataExpand
                         foreach (var element in collection.Elements)
                         {
                             index++;
+                            var testDataIndex = 0;
+                            if (arg!=null) testDataIndex=arg.Value.index;
                             var testDataArr = ((element as ExpressionElementSyntax).Expression as ArrayCreationExpressionSyntax);
                             var testDataList = testDataArr.Initializer.Expressions;
-                            var displyName=( testDataList[arg.Value.index] as LiteralExpressionSyntax);
+                            var displyName=( testDataList[testDataIndex] as LiteralExpressionSyntax);
                             var testDataCode= string.Join(",", testDataList.Select(x=>(x as LiteralExpressionSyntax).Token.Text));
                             expandCodeInfo.TestDataList.Add(testDataCode);
                             if (displyName.Kind().ToString()=="StringLiteralExpression")
                             {
                                
                                 expandCodeInfo.DispalyNameList.Add(displyName.Token.ValueText);
+                            }else
+                            {
+                                expandCodeInfo.DispalyNameList.Add(null);
                             }
                         }
                         expandCodeInfo.TestDataCount=index;
@@ -281,7 +287,7 @@ namespace Sky.Xunit.TestDataExpand
         {string.Join("\r\n", Enumerable.Range(0, item.TestDataCount).Select(i =>
                 {
                     return $@"
-        [Fact(DisplayName ={$"\"{item.DispalyNameList[i]}\""})]
+        {(!string.IsNullOrWhiteSpace(item.DispalyNameList[i]) ?$"[Fact(DisplayName ={$"\"{item.DispalyNameList[i]}\""})]": "[Fact]") }
         public void {item.MethodNameText}_G{i}()
         {{
             {item.MethodNameText}({item.TestDataList[i]});
@@ -313,7 +319,9 @@ using Sky.Xunit.TestDataExpand;
             //{
             //    System.Diagnostics.Debugger.Launch();
             //}
+#if DEBUG
             //System.Diagnostics.Debugger.Launch();
+#endif
         }
     }
 }

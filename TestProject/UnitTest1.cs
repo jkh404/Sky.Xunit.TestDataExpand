@@ -8,15 +8,15 @@ namespace TestProject
 
         public static IEnumerable<object[]> Test1Data =>
         [
-            new object[]{ "≤‚ ‘1",1, 2, 3 },
-            new object[]{ "≤‚ ‘2",1, 1, 2 },
-            new object[]{ "≤‚ ‘3",2, 2, 4 },
+            new object[]{ 1, 2, 3,"≤‚ ‘1" },
+            new object[]{ 1, 1, 2 ,"≤‚ ‘2"},
+            new object[]{ 2, 2, 4 ,"≤‚ ‘3"},
         ];
 
         [Xunit.Theory]
         [MemberData(nameof(Test1Data))]
         [TestDataExpand(nameof(Test1Data))]
-        public void Test1([WithDisplayName] string name,int num1,int num2 ,int sumnum)
+        public void Test1(int num1,int num2 ,int sumnum,[WithDisplayName] string name)
         {
 
             Assert.Equal(num1+num2, sumnum);

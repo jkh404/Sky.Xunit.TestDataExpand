@@ -7,3 +7,5 @@
 /TestProject/bin/Debug/net8.0
 /TestProject/obj
 /Sky.Xunit.TestDataExpand/bin/Debug/netstandard2.0
+/Sky.Xunit.TestDataExpand/bin
+/TestProject/bin/Release/net8.0
