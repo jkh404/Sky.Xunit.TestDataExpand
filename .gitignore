@@ -1,0 +1,9 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/.vs
+/Sky.Xunit.TestDataExpand/obj
+/TestProject/bin/Debug/net8.0
+/TestProject/obj
+/Sky.Xunit.TestDataExpand/bin/Debug/netstandard2.0
