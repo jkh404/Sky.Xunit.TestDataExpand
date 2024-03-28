@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
 
@@ -174,10 +175,13 @@ namespace Sky.Xunit.TestDataExpand
             public bool HasNamespace { get; internal set; }
             public string FileName { get; internal set; }
             public string TestDataCode { get; internal set; }
+            public string UsingsCode { get; internal set; }
         }
-        private List<TestDataExpandCodeInfo>  GetTestDataExpandCodeInfos(ClassDeclarationSyntax declarationSyntax, string namespaceText="")
+        private List<TestDataExpandCodeInfo>  GetTestDataExpandCodeInfos(ClassDeclarationSyntax declarationSyntax,string usingsCode, string namespaceText="")
         {
+            var name2= declarationSyntax.GetClassName();
             List<TestDataExpandCodeInfo> testData=new List<TestDataExpandCodeInfo>();
+            var fileIndex = 0;
             foreach (MemberDeclarationSyntax item in declarationSyntax.Members)
             {
                 
@@ -185,6 +189,7 @@ namespace Sky.Xunit.TestDataExpand
                 {
                     TestDataExpandCodeInfo expandCodeInfo = new TestDataExpandCodeInfo()
                     {
+                        UsingsCode=usingsCode,
                         NamespaceText=namespaceText,
                         HasNamespace=!string.IsNullOrEmpty(namespaceText),
                         ClassNameText=declarationSyntax.GetClassName(),
@@ -192,7 +197,7 @@ namespace Sky.Xunit.TestDataExpand
                         MethodNameText=(item as MethodDeclarationSyntax).GetMethodName(),
                         MethodArgCount=(item as MethodDeclarationSyntax).GetMethodArgCount(),
                     };
-                    expandCodeInfo.FileName=$"{expandCodeInfo.ClassNameText}.g.cs";
+                    expandCodeInfo.FileName=$"{expandCodeInfo.ClassNameText}_{fileIndex++}.g.cs";
                     (int index, ParameterSyntax syntax)? arg=(item as MethodDeclarationSyntax).GetMethodArgWithAttribute<WithDisplayNameAttribute>();
                     AttributeSyntax attr= item.GetAttributeWithMethod<TestDataExpandAttribute>();
                     if (attr!=null)
@@ -201,28 +206,61 @@ namespace Sky.Xunit.TestDataExpand
                         var name=attr.GetAttributeStrArg().FirstOrDefault(x=>!string.IsNullOrEmpty(x));
 
                         var StaticTestData=(declarationSyntax.FindByName(name) as PropertyDeclarationSyntax);
-                        var collection = StaticTestData?.ExpressionBody.Expression as CollectionExpressionSyntax;
-                        int index = 0;
-                        foreach (var element in collection.Elements)
+                        
+                        if (StaticTestData?.ExpressionBody.Expression is CollectionExpressionSyntax)
                         {
-                            index++;
-                            var testDataIndex = 0;
-                            if (arg!=null) testDataIndex=arg.Value.index;
-                            var testDataArr = ((element as ExpressionElementSyntax).Expression as ArrayCreationExpressionSyntax);
-                            var testDataList = testDataArr.Initializer.Expressions;
-                            var displyName=( testDataList[testDataIndex] as LiteralExpressionSyntax);
-                            var testDataCode= string.Join(",", testDataList.Select(x=>(x as LiteralExpressionSyntax).Token.Text));
-                            expandCodeInfo.TestDataList.Add(testDataCode);
-                            if (displyName.Kind().ToString()=="StringLiteralExpression")
+                            var collection = StaticTestData?.ExpressionBody.Expression as CollectionExpressionSyntax;
+                            int index = 0;
+                            foreach (var element in collection.Elements)
                             {
-                               
-                                expandCodeInfo.DispalyNameList.Add(displyName.Token.ValueText);
-                            }else
-                            {
-                                expandCodeInfo.DispalyNameList.Add(null);
+                                index++;
+                                var testDataIndex = 0;
+                                if (arg!=null) testDataIndex=arg.Value.index;
+                                var testDataArr = ((element as ExpressionElementSyntax).Expression as ArrayCreationExpressionSyntax);
+                                var testDataList = testDataArr.Initializer.Expressions;
+                                var displyName = (testDataList[testDataIndex] as LiteralExpressionSyntax);
+                                var testDataCode = string.Join(",", testDataList.Select(x => x.GetText().ToString()));
+                                expandCodeInfo.TestDataList.Add(testDataCode);
+                                if (displyName.Kind().ToString()=="StringLiteralExpression")
+                                {
+
+                                    expandCodeInfo.DispalyNameList.Add(displyName.Token.ValueText);
+                                }
+                                else
+                                {
+                                    expandCodeInfo.DispalyNameList.Add(null);
+                                }
                             }
+                            expandCodeInfo.TestDataCount=index;
                         }
-                        expandCodeInfo.TestDataCount=index;
+                        else if(StaticTestData?.ExpressionBody.Expression is ObjectCreationExpressionSyntax)
+                        {
+                            var ObjectCreation = (StaticTestData?.ExpressionBody.Expression as ObjectCreationExpressionSyntax);
+                            var ObjectCreationTestDataList = ObjectCreation.Initializer.Expressions;
+                            int index = 0;
+                            foreach (ArrayCreationExpressionSyntax testDataArr in ObjectCreationTestDataList)
+                            {
+                                index++;
+                                var testDataIndex = 0;
+                                if (arg!=null) testDataIndex=arg.Value.index;
+                                var testDataList = testDataArr.Initializer.Expressions;
+                                var displyName = (testDataList[testDataIndex] as LiteralExpressionSyntax);
+                                var testDataCode = string.Join(",", testDataList.Select(x => x.GetText().ToString()));
+                                expandCodeInfo.TestDataList.Add(testDataCode);
+                                if (displyName.Kind().ToString()=="StringLiteralExpression")
+                                {
+
+                                    expandCodeInfo.DispalyNameList.Add(displyName.Token.ValueText);
+                                }
+                                else
+                                {
+                                    expandCodeInfo.DispalyNameList.Add(null);
+                                }
+                            }
+
+                            expandCodeInfo.TestDataCount=index;
+                        }
+                        
                         testData.Add(expandCodeInfo);
 
                     }
@@ -239,13 +277,14 @@ namespace Sky.Xunit.TestDataExpand
             {
                 var root = item.GetCompilationUnitRoot();
 
+                var usingsCode = root.Usings.ToString();
                 foreach (var member in root.Members)
                 {
 
                     if (member is ClassDeclarationSyntax)
                     {
                         ClassDeclarationSyntax _member = member as ClassDeclarationSyntax;
-                        list.AddRange(GetTestDataExpandCodeInfos(_member));
+                        list.AddRange(GetTestDataExpandCodeInfos(_member, usingsCode));
                     }
                     else if (member is FileScopedNamespaceDeclarationSyntax)
                     {
@@ -256,7 +295,7 @@ namespace Sky.Xunit.TestDataExpand
                             if (innermember is ClassDeclarationSyntax)
                             {
                                 var _member = innermember as ClassDeclarationSyntax;
-                                list.AddRange(GetTestDataExpandCodeInfos(_member, namespaceText));
+                                list.AddRange(GetTestDataExpandCodeInfos(_member, usingsCode, namespaceText));
                             }
                         }
                     }
@@ -269,8 +308,10 @@ namespace Sky.Xunit.TestDataExpand
 
                             if (innermember is ClassDeclarationSyntax)
                             {
+
                                 var _member = innermember as ClassDeclarationSyntax;
-                                list.AddRange(GetTestDataExpandCodeInfos(_member, namespaceText));
+                                
+                                list.AddRange(GetTestDataExpandCodeInfos(_member, usingsCode, namespaceText));
                             }
                         }
                     }
@@ -297,11 +338,7 @@ namespace Sky.Xunit.TestDataExpand
                 }))}
     }}";
                 sb.Append($@"
-using System;
-using System.ComponentModel;
-using System.Reflection;
-using Xunit;
-using Sky.Xunit.TestDataExpand;
+{item.UsingsCode}
 {(item.HasNamespace ? $@"namespace {item.NamespaceText}
 {{
     {classCode}
