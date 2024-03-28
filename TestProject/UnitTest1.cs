@@ -8,9 +8,9 @@ namespace TestProject
 
         public static IEnumerable<object[]> Test1Data =>
         [
-            new object[]{ 1, 2, 3,"≤‚ ‘1" },
-            new object[]{ 1, 1, 2 ,"≤‚ ‘2"},
-            new object[]{ 2, 2, 4 ,"≤‚ ‘3"},
+            [1, 2, 3,"≤‚ ‘1"],
+            [1, 1, 2 ,"≤‚ ‘2"],
+            [2, 2, 4 ,"≤‚ ‘3"],
         ];
 
         [Xunit.Theory]

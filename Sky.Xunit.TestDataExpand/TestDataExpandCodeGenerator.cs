@@ -181,7 +181,7 @@ namespace Sky.Xunit.TestDataExpand
         {
             var name2= declarationSyntax.GetClassName();
             List<TestDataExpandCodeInfo> testData=new List<TestDataExpandCodeInfo>();
-            var fileIndex = 0;
+            
             foreach (MemberDeclarationSyntax item in declarationSyntax.Members)
             {
                 
@@ -197,7 +197,7 @@ namespace Sky.Xunit.TestDataExpand
                         MethodNameText=(item as MethodDeclarationSyntax).GetMethodName(),
                         MethodArgCount=(item as MethodDeclarationSyntax).GetMethodArgCount(),
                     };
-                    expandCodeInfo.FileName=$"{expandCodeInfo.ClassNameText}_{fileIndex++}.g.cs";
+                    expandCodeInfo.FileName=$"{expandCodeInfo.ClassNameText}_{expandCodeInfo.MethodNameText}.g.cs";
                     (int index, ParameterSyntax syntax)? arg=(item as MethodDeclarationSyntax).GetMethodArgWithAttribute<WithDisplayNameAttribute>();
                     AttributeSyntax attr= item.GetAttributeWithMethod<TestDataExpandAttribute>();
                     if (attr!=null)
@@ -216,19 +216,40 @@ namespace Sky.Xunit.TestDataExpand
                                 index++;
                                 var testDataIndex = 0;
                                 if (arg!=null) testDataIndex=arg.Value.index;
-                                var testDataArr = ((element as ExpressionElementSyntax).Expression as ArrayCreationExpressionSyntax);
-                                var testDataList = testDataArr.Initializer.Expressions;
-                                var displyName = (testDataList[testDataIndex] as LiteralExpressionSyntax);
-                                var testDataCode = string.Join(",", testDataList.Select(x => x.GetText().ToString()));
-                                expandCodeInfo.TestDataList.Add(testDataCode);
-                                if (displyName.Kind().ToString()=="StringLiteralExpression")
+                                
+                                if ((element as ExpressionElementSyntax).Expression is ArrayCreationExpressionSyntax)
                                 {
+                                    var testDataArr  = ((element as ExpressionElementSyntax).Expression as ArrayCreationExpressionSyntax);
+                                    var testDataList = testDataArr.Initializer.Expressions;
+                                    var displyName = (testDataList[testDataIndex] as LiteralExpressionSyntax);
+                                    var testDataCode = string.Join(",", testDataList.Select(x => x.GetText().ToString()));
+                                    expandCodeInfo.TestDataList.Add(testDataCode);
+                                    if (displyName.Kind().ToString()=="StringLiteralExpression")
+                                    {
 
-                                    expandCodeInfo.DispalyNameList.Add(displyName.Token.ValueText);
+                                        expandCodeInfo.DispalyNameList.Add(displyName.Token.ValueText);
+                                    }
+                                    else
+                                    {
+                                        expandCodeInfo.DispalyNameList.Add(null);
+                                    }
                                 }
-                                else
+                                else if ((element as ExpressionElementSyntax).Expression is CollectionExpressionSyntax)
                                 {
-                                    expandCodeInfo.DispalyNameList.Add(null);
+                                    var testDataArr = ((element as ExpressionElementSyntax).Expression as CollectionExpressionSyntax);
+                                    var testDataList = testDataArr.Elements;
+                                    var displyName = testDataList[testDataIndex] as ExpressionElementSyntax;
+                                    var testDataCode = string.Join(",", testDataList.Select(x => x.GetText().ToString()));
+                                    var Literal= displyName.Expression as LiteralExpressionSyntax;
+                                    expandCodeInfo.TestDataList.Add(testDataCode);
+                                    if (Literal.Kind().ToString()=="StringLiteralExpression")
+                                    {
+                                        expandCodeInfo.DispalyNameList.Add(Literal.Token.ValueText);
+                                    }
+                                    else
+                                    {
+                                        expandCodeInfo.DispalyNameList.Add(null);
+                                    }
                                 }
                             }
                             expandCodeInfo.TestDataCount=index;
