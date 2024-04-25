@@ -157,7 +157,7 @@ namespace Sky.Xunit.TestDataExpand
         }
         
     }
-    [Generator]
+    [Generator(LanguageNames.CSharp)]
     internal sealed class TestDataExpandCodeGenerator : ISourceGenerator
     {
         private class TestDataExpandCodeInfo
